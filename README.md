@@ -11,18 +11,25 @@ Server example:
 	
 NetServer server = new NetServer();
 
-server.OnConnected = (NetPeer peer) =>
+server.OnConnected = (NetPeer _peer) =>
 {
-    Console.WriteLine("[Server] Connected");
-    peer.Send(new byte[] { 44 });
+    Console.WriteLine("Connected");
+
 };
 
-server.OnReceived = (NetPeer peer,byte[] data,int length) =>
+server.OnReceived = (NetPeer _peer, byte[] data, int length) =>
 {
-    Console.WriteLine("[Server] Received: {0}", BitConverter.ToString(data,0,length));
+    Console.WriteLine("Received: {0}", BitConverter.ToString(data, 0, length));
 };
+
 
 server.Start(10001);
+
+while(true)
+{
+    server.Poll();
+    server.Receive();
+}
 
 ```
 
@@ -30,28 +37,25 @@ server.Start(10001);
 Client example:
 
 ```csharp
-NetClient client;
 
-public void Main()
+NetClient client = new NetClient();
+
+client.OnConnected = () =>
 {
-    client = new NetClient();
+    Console.WriteLine("Connected");
+};
 
-    client.OnConnected = OnConnected;
-    client.OnReceived = OnReceived;
-    client.Connect("127.0.0.1", 10001);
-
-}
-
-
-public static void OnConnected()
+client.OnReceived = (byte[] data, int length) =>
 {
-    Console.WriteLine("[Client] Connected");   
-}
+    Console.WriteLine("Received: {0}", BitConverter.ToString(data, 0, length));
+};
 
-public static void OnReceived(byte[] data, int length)
+client.Connect("127.0.0.1", 10001);
+
+while(true)
 {
-    Console.WriteLine("[Client] Received: {0}", BitConverter.ToString(data, 0, length));
-    client.Send(new byte[] { 1,88 });
+    client.Poll();
+    client.Receive();
 }
 
 ```
