@@ -99,7 +99,6 @@ namespace VNet
             {
                 PacketFlags pf = PacketFlags.None;
                 
-
                 Packet p = default(Packet);
 
                 p.Create(pgd.data,0,pgd.size, pf);
