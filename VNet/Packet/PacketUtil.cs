@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using ENet;
+using NetStack.Buffers;
 using VNet.Util;
 
 namespace VNet
@@ -32,10 +33,12 @@ namespace VNet
 
     public class PacketUtil
     {
-       
+
+        private static ArrayPool<byte> packetHandlerPool = ArrayPool<byte>.Create(1500, 50);
+
         public static void HandleGroup(byte[] data, int length,Action<byte[],int> iteratePacketCallback)
         {
-            byte[] packetData = new byte[1024];
+            byte[] packetData = packetHandlerPool.Rent(1024);
             int sizeRead = 0;
             unsafe
             {
@@ -56,6 +59,8 @@ namespace VNet
                     } while (sizeRead < length);
                 }
             }
+
+            packetHandlerPool.Return(packetData);
         }
     }
 

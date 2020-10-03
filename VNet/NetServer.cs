@@ -4,14 +4,21 @@ using System.Text;
 using VNet.Util;
 using ENet;
 using System.Threading;
+using NetStack.Buffers;
+
 
 namespace VNet
 {
     public class NetServer
     {
+
+
         private int MESSAGE_OUTPUT_QUEUE_SIZE = 100000;
         private int MESSAGE_INPUT_QUEUE_SIZE = 100000;
         private int MAX_PEERS = 4000;
+
+
+        private ArrayPool<byte> receiveBufferPool = ArrayPool<byte>.Create(1500, 100);
 
         public RingBuffer<OutgoingPacket> outgoingPackets;
         public RingBuffer<IncomingPacket> incomingPackets;
@@ -106,7 +113,7 @@ namespace VNet
 
                         case ENet.EventType.Receive:
 
-                            byte[] buffer = new byte[netEvent.Packet.Length];
+                            byte[] buffer = receiveBufferPool.Rent(netEvent.Packet.Length);
                             netEvent.Packet.CopyTo(buffer);
 
                             IncomingPacket ip = new IncomingPacket();
@@ -174,8 +181,11 @@ namespace VNet
 
                         (byte[] _data, int _len) => {
                             OnReceived(clients[incomingPacket.peerID],_data, _len);
+                            
                         }
                         );
+
+                    receiveBufferPool.Return(incomingPacket.data);
 
 
                 }

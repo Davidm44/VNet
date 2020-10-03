@@ -131,6 +131,20 @@ namespace VNet
 
         public void Send(byte[] data, bool isReliable = false)
         {
+            byte[] fixedData = new byte[data.Length + 1];
+
+            unsafe
+            {
+                fixed (byte* dest = fixedData)
+                {
+                    *dest = (byte)data.Length;
+                    fixed (byte* src = data)
+                    {
+                        Memory.MemoryCopy((void*)(dest + 1), (void*)src, data.Length);
+                    }
+                }
+            }
+
             PacketFlags pf = PacketFlags.None;
             if (isReliable == true)
             {
@@ -139,7 +153,7 @@ namespace VNet
 
             Packet p = default(Packet);
 
-            p.Create(data, pf);
+            p.Create(fixedData,0, fixedData.Length,pf);
             OutgoingPacket packet = new OutgoingPacket();
             packet.packet = p;
 
